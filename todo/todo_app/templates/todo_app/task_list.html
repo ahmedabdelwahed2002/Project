@@ -82,6 +82,10 @@
         color: #e53935;
     }
 
+    .timer.green {
+        color: #4caf50;
+    }
+
     .pomodoro-button {
         background-color: #e53935;
         color: white;
@@ -129,10 +133,16 @@
     let minutes = parseInt(sessionStorage.getItem('minutes')) || 25;
     let seconds = parseInt(sessionStorage.getItem('seconds')) || 0;
     let isRunning = sessionStorage.getItem('isRunning') === 'true';
+    let isBreak = sessionStorage.getItem('isBreak') === 'true';
 
     function updateTimerDisplay() {
         const timerDisplay = document.getElementById('timer');
         timerDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        if (isBreak) {
+            timerDisplay.classList.add('green');
+        } else {
+            timerDisplay.classList.remove('green');
+        }
     }
 
     function startTimer() {
@@ -142,10 +152,20 @@
         timer = setInterval(() => {
             if (seconds === 0) {
                 if (minutes === 0) {
-                    clearInterval(timer);
-                    isRunning = false;
-                    sessionStorage.setItem('isRunning', 'false');
-                    alert("Time's up!");
+                    if (isBreak) {
+                        clearInterval(timer);
+                        isRunning = false;
+                        sessionStorage.setItem('isRunning', 'false');
+                        alert("Break is over!");
+                        resetTimer();  // Reset to 25 minutes work timer
+                    } else {
+                        minutes = 5; // Set break time to 5 minutes
+                        seconds = 0;
+                        isBreak = true;
+                        sessionStorage.setItem('isBreak', 'true');
+                        updateTimerDisplay();
+                        alert("Time's up! Take a 5-minute break.");
+                    }
                 } else {
                     minutes--;
                     seconds = 59;
@@ -164,9 +184,11 @@
         minutes = 25;
         seconds = 0;
         isRunning = false;
+        isBreak = false;
         sessionStorage.removeItem('minutes');
         sessionStorage.removeItem('seconds');
         sessionStorage.setItem('isRunning', 'false');
+        sessionStorage.setItem('isBreak', 'false');
         updateTimerDisplay();
     }
 
