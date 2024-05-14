@@ -15,6 +15,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200&display=swap" rel="stylesheet">
 
     <style>
+        #footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #f8f9fa;
+            color: black;
+            text-align: center;
+        }
         body {
             background-color: #FAFAFA;
             font-family: 'Nunito', sans-serif;
@@ -26,7 +35,7 @@
         h3,
         h4,
         h5,
-        h6,
+        h6
             {
             font-family: 'Raleway', sans-serif;
         }
@@ -195,6 +204,32 @@
         .card-body {
             padding: 20px;
         }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #start {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+
+        #pause {
+            background-color: #f44336; /* Red */
+            color: white;
+        }
+
+        #start:hover {
+            background-color: #45a049; /* Darker green */
+        }
+
+        #pause:hover {
+            background-color: #da190b; /* Darker red */
+        }
     </style>
 </head>
 
@@ -203,7 +238,85 @@
     <div class="container">
         {% block content %} {% endblock content %}
     </div>
+    <div id="footer">
+        <h2 id="timer">25:00</h2>
+        <button id="start">Start</button>
+        <button id="pause">Pause</button>
+    </div>
+    <script>
+        var workMinutes = 1;
+        var shortBreakMinutes = 5;
+        var longBreakMinutes = 15;
+        var seconds = 0;
+        var workSessions = 0;
+        var timerId;
+        var TimerStarted;
+        // Load state from local storage
+        workMinutes =parseInt(localStorage.getItem('workMinutes') || 1);
+        seconds = parseInt(localStorage.getItem('seconds') || 0);
+        workSessions = parseInt(localStorage.getItem('workSessions') || 0);
+        timerOn = parseInt(localStorage.getItem('timerOn'));
+        var displaySeconds = seconds;
+            var displayWorkMinutes = workMinutes;
+            
+            if (seconds < 10) {
+                displaySeconds = "0" + seconds;
+            }
+            if (workMinutes < 10) {
+                displayWorkMinutes = "0" + workMinutes;
+            }
+            document.getElementById("timer").innerHTML = displayWorkMinutes + ":" + displaySeconds;
+        if(timerOn)
+        {
+            timerId = setInterval(pomodoro, 1000);
+        }
 
+        document.getElementById("start").addEventListener("click", function() {
+            timerId = setInterval(pomodoro, 1000);
+            timerOn =1;
+            localStorage.setItem('timerOn', timerOn);
+        });
+
+        document.getElementById("pause").addEventListener("click", function() {
+            clearInterval(timerId);
+            timerOn =0;
+            localStorage.setItem('timerOn', timerOn);
+        });
+
+        function pomodoro() {
+            var displaySeconds = seconds;
+            var displayWorkMinutes = workMinutes;
+            
+            if (seconds < 10) {
+                displaySeconds = "0" + seconds;
+            }
+            if (workMinutes < 10) {
+                displayWorkMinutes = "0" + workMinutes;
+            }
+            document.getElementById("timer").innerHTML = displayWorkMinutes + ":" + displaySeconds;
+
+            if (seconds <= 0 && workMinutes <= 0) {
+                workSessions++;
+                if (workSessions % 4 === 0) {
+                    alert("Work session complete! Take a long break.");
+                    workMinutes = longBreakMinutes;
+                } else {
+                    alert("Work session complete! Take a short break.");
+                    workMinutes = shortBreakMinutes;
+                }
+                seconds = 0;
+            } else if (seconds <= 0) {
+                workMinutes--;
+                seconds = 59;
+            } else {
+                seconds--;
+            }
+            // Save state to local storage
+            localStorage.setItem('workMinutes', workMinutes);
+            localStorage.setItem('seconds', seconds);
+            localStorage.setItem('workSessions', workSessions);
+        }
+    </script>
 </body>
 
 
