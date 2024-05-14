@@ -1,13 +1,12 @@
-{% extends 'todo_app/main.html' %} {% block content %}
+{% extends 'todo_app/main.html' %}
 
+{% block content %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <div class="header-bar">
     <div>
         <h1>Hello {{request.user|title}}</h1>
         <h3 style="margin:0">You have <i>{{count}}</i> incomplete task{{ count|pluralize:"s" }}</h3>
     </div>
-
-    <!-- {% if request.user.is_authenticated %} -->
 
     {% if request.user.is_authenticated %}
     <form id="logoutForm" action="{% url 'logout' %}" method="post">
@@ -17,10 +16,7 @@
     {% else %}
         <a href="{% url 'login' %}">Login</a>
     {% endif %}
-
-    <!-- <a href="{% url 'login' %}">Login</a> {% endif %} -->
 </div>
-
 
 <div id="search-add-wrapper">
     <form method="GET" style="display: flex;">
@@ -32,13 +28,11 @@
     {% endif %}
 </div>
 
-
 <!-- Hidden form. Form submits new item positions -->
 <form style="display: none;" id="reorderForm" method="post" action="{% url 'task-reorder' %}">
     {% csrf_token %}
     <input type="hidden" id="positionInput" name="position">
 </form>
-
 
 <div id="tasklist" class="task-items-wrapper">
     {% for task in tasks %}
@@ -64,7 +58,49 @@
     {% endfor %}
 </div>
 
+<!-- Pomodoro Timer -->
+<div class="pomodoro-container">
+    <div id="timer" class="timer">25:00</div>
+    <button class="pomodoro-button" onclick="startTimer()">Start</button>
+    <button class="pomodoro-button" onclick="resetTimer()">Reset</button>
+</div>
+
+<style>
+    .pomodoro-container {
+        text-align: center;
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f4f4f4;
+        border: 2px solid #e53935;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .timer {
+        font-size: 3em;
+        margin-bottom: 20px;
+        color: #e53935;
+    }
+
+    .pomodoro-button {
+        background-color: #e53935;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        margin: 5px;
+        font-size: 1em;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .pomodoro-button:hover {
+        background-color: #d32f2f;
+    }
+</style>
+
 <script>
+    // Task reordering script
     var taskList = document.getElementById("tasklist");
     var reorderForm = document.getElementById("reorderForm");
     var positionInput = document.getElementById("positionInput");
@@ -73,7 +109,6 @@
         handle: '.handle',
         ghostClass: 'dropArea',
         chosenClass: 'selectedTask',
-
     });
 
     function reordering() {
@@ -87,7 +122,61 @@
         reorderForm.submit();
     }
 
-    document.ondrop = reordering
+    document.ondrop = reordering;
+
+    // Pomodoro Timer Script
+    let timer;
+    let minutes = parseInt(sessionStorage.getItem('minutes')) || 25;
+    let seconds = parseInt(sessionStorage.getItem('seconds')) || 0;
+    let isRunning = sessionStorage.getItem('isRunning') === 'true';
+
+    function updateTimerDisplay() {
+        const timerDisplay = document.getElementById('timer');
+        timerDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        if (timer) clearInterval(timer);
+        isRunning = true;
+        sessionStorage.setItem('isRunning', 'true');
+        timer = setInterval(() => {
+            if (seconds === 0) {
+                if (minutes === 0) {
+                    clearInterval(timer);
+                    isRunning = false;
+                    sessionStorage.setItem('isRunning', 'false');
+                    alert("Time's up!");
+                } else {
+                    minutes--;
+                    seconds = 59;
+                }
+            } else {
+                seconds--;
+            }
+            updateTimerDisplay();
+            sessionStorage.setItem('minutes', minutes);
+            sessionStorage.setItem('seconds', seconds);
+        }, 1000);
+    }
+
+    function resetTimer() {
+        clearInterval(timer);
+        minutes = 25;
+        seconds = 0;
+        isRunning = false;
+        sessionStorage.removeItem('minutes');
+        sessionStorage.removeItem('seconds');
+        sessionStorage.setItem('isRunning', 'false');
+        updateTimerDisplay();
+    }
+
+    // Initialize the timer display
+    updateTimerDisplay();
+
+    // Restart the timer if it was running
+    if (isRunning) {
+        startTimer();
+    }
 </script>
 
 {% endblock content %}
